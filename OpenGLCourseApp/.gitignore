@@ -1,0 +1,9 @@
+.vs/*
+Debug/*
+Release/*
+OpenGLCourseApp/Debug/*
+OpenGLCourseApp/glew32.dll
+OpenGLCourseApp/OpenGLCourseApp.vcxproj
+OpenGLCourseApp/OpenGLCourseApp.vcxproj.filters
+OpenGLCourseApp/OpenGLCourseApp.vcxproj.user
+Release/*
