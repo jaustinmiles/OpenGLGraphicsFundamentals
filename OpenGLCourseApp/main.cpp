@@ -1,25 +1,36 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <cmath>
 
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 const GLint WIDTH = 800, HEIGHT = 600;
-GLuint VAO, VBO, shader;
+GLuint VAO, VBO, shader, uniformModel;
+
+bool direction = true;
+float triOffset = 0.0f;
+float triMaxoffset = 0.7f;
+float triIncrement = 0.005f;
 
 
 // Vertex Shader
 static const char* vShader = "          \n\
 #version 330                            \n\
                                         \n\
+                                        \n\
 layout (location = 0) in vec3 pos;      \n\
+uniform float xMove;                    \n\
                                         \n\
 void main()                             \n\
 {                                       \n\
-    gl_Position = vec4(pos, 1.0);       \n\
+    gl_Position = vec4(0.4 * pos.x + xMove, 0.4 * pos.y, 0.4 * pos.z, 1.0);       \n\
 }                                       \n\
 ";
 
@@ -38,8 +49,8 @@ void CreateTriangle()
 {
     GLfloat vertices[] = {
         -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
-        0.0f, 1.0f, 0.0f
+         1.0f, -1.0f, 0.0f,
+         0.0f, 1.0f, 0.0f
     };
 
     glGenVertexArrays(1, &VAO);
@@ -116,6 +127,8 @@ void CompileShaders() {
         printf("Error validating program: '%s'\n", eLog);
         return;
     }
+
+    uniformModel = glGetUniformLocation(shader, "xMove");
 }
 
 
@@ -180,12 +193,25 @@ int main()
     {
         // Get and handle user input events
         glfwPollEvents();
+        if (direction)
+        {
+            triOffset += triIncrement;
+        }
+        else {
+            triOffset -= triIncrement;
+        }
+
+        if (abs(triOffset) >= triMaxoffset)
+        {
+            direction = !direction;
+        }
 
         // Clear window
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shader);
+        glUniform1f(uniformModel, triOffset);
 
         glBindVertexArray(VAO);
 
