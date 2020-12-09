@@ -13,13 +13,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Mesh.h"
+#include "Shader.h"
 
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.0f;
 
 std::vector<Mesh*> meshList;
-
-GLuint shader, uniformModel, uniformProjection;
+std::vector<Shader> shaderList;
 
 bool direction = true;
 float triOffset = 0.0f;
@@ -37,38 +37,11 @@ float minSize = 0.1f;
 
 
 // Vertex Shader
-static const char* vShader = "          \n\
-#version 330                            \n\
-                                        \n\
-                                        \n\
-layout (location = 0) in vec3 pos;      \n\
-                                        \n\
-out vec4 vCol;                          \n\
-                                        \n\
-uniform mat4 model;                     \n\
-uniform mat4 projection;                \n\
-                                        \n\
-void main()                             \n\
-{                                       \n\
-    gl_Position = projection * model * vec4(pos, 1.0); \n\
-    vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);\n\
-}                                       \n\
-";
+static const char* vShader = "Shaders/shader.vert";
 
-static const char* fShader = "          \n\
-#version 330                            \n\
-                                        \n\
-in vec4 vCol;                           \n\
-                                        \n\
-out vec4 color;                         \n\
-                                        \n\
-void main()                             \n\
-{                                       \n\
-    color = vCol;   \n\
-}                                       \n\
-";
+static const char* fShader = "Shaders/shader.frag";
 
-void CreateTriangle()
+void CreateObjects()
 {
     unsigned int indices[] = {
         0, 3, 1,
@@ -94,67 +67,12 @@ void CreateTriangle()
 }
 
 
-void AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
+
+void CreateShaders()
 {
-    GLuint theShader = glCreateShader(shaderType);
-    const GLchar* theCode[1];
-    theCode[0] = shaderCode;
-    GLint codeLength[1];
-    codeLength[0] = strlen(shaderCode);
-    glShaderSource(theShader, 1, theCode, codeLength);
-    glCompileShader(theShader);
-
-    GLint result = 0;
-    GLchar eLog[1024] = { 0 };
-
-    glGetShaderiv(theShader, GL_COMPILE_STATUS, &result);
-    if (!result)
-    {
-        glGetShaderInfoLog(shader, sizeof(eLog), NULL, eLog);
-        printf("Error compiling the %d shader: '%s'\n", shaderType, eLog);
-        return;
-    }
-
-    glAttachShader(theProgram, theShader);
-}
-
-
-
-void CompileShaders() {
-    shader = glCreateProgram();
-    if (!shader)
-    {
-        printf("Error creating shader program");
-        return;
-    }
-
-    AddShader(shader, vShader, GL_VERTEX_SHADER);
-    AddShader(shader, fShader, GL_FRAGMENT_SHADER);
-
-    GLint result = 0;
-    GLchar eLog[1024] = { 0 };
-    glLinkProgram(shader);
-    glGetProgramiv(shader, GL_LINK_STATUS, &result);
-
-    if (!result)
-    {
-        glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
-        printf("Error linking program: '%s'\n", eLog);
-        return;
-    }
-
-    glValidateProgram(shader);
-    glGetProgramiv(shader, GL_VALIDATE_STATUS, &result);
-
-    if (!result)
-    {
-        glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
-        printf("Error validating program: '%s'\n", eLog);
-        return;
-    }
-
-    uniformModel = glGetUniformLocation(shader, "model");
-    uniformProjection = glGetUniformLocation(shader, "projection");
+    Shader* shader1 = new Shader();
+    shader1->CreateFromFiles(vShader, fShader);
+    shaderList.push_back(*shader1);
 }
 
 
@@ -211,10 +129,12 @@ int main()
     // Setup Viewport size
     glViewport(0, 0, bufferWidth, bufferHeight);
 
-    CreateTriangle();
-    CompileShaders();
+    CreateObjects();
+    CreateShaders();
 
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
+    GLuint uniformProjection = 0, uniformModel = 0;
+
 
     // Loop until window closed
 
@@ -262,7 +182,9 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shader);
+        shaderList[0].UseShader();
+        uniformModel = shaderList[0].GetModelLocation();
+        uniformProjection = shaderList[0].GetProjectionLocation();
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(triOffset, 0.0f, -2.5f));
