@@ -4,6 +4,9 @@ Window::Window()
 {
     width = 800;
     height = 600;
+    xChange = 0.0f;
+    yChange = 0.0f;
+
 
     for (size_t i = 0; i < 1024; i++)
     {
@@ -15,6 +18,8 @@ Window::Window(GLint windowWidth, GLint windowHeight)
 {
 	width = windowWidth;
 	height = windowHeight;
+    xChange = 0.0f;
+    yChange = 0.0f;
 
     for (size_t i = 0; i < 1024; i++)
     {
